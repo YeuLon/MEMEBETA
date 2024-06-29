@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đánh Bài Meme</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://i.pinimg.com/550x/da/46/96/da4696737e7a3d8698aa9e331ef94c85.jpg');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: red;
+            text-shadow: 2px 2px 0 #FFD700, 2px -2px 0 #FFD700, -2px 2px 0 #FFD700, -2px -2px 0 #FFD700;
+            font-size: 2.5em;
+        }
+        .start-button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .start-button:hover {
+            background-color: #218838;
+        }
+        .game-area {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .card-area {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .player-cards, .opponent-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, auto);
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .player-cards {
+            background-color: rgba(0, 0, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .opponent-cards {
+            background-color: rgba(255, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .card {
+            border: 1px solid #000;
+            border-radius: 10px;
+            background-color: #fff;
+            padding: 5px;
+            width: 80px;
+            height: 120px;
+            text-align: center;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            cursor: pointer; /* Tạo hiệu ứng con trỏ khi di chuột vào lá bài */
+        }
+        .card img {
+            max-width: 100%;
+            max-height: 60%;
+        }
+        .card h3 {
+            margin: 5px 0 0;
+            font-size: 0.9em;
+        }
+        .card p {
+            margin: 5px 0 0;
+            font-size: 0.8em;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+        .action-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        .action-button:hover {
+            background-color: #0056b3;
+        }
+        .game-status {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="start-screen">
+        <h1>ĐẤU BÀI MEME!</h1>
+        <button class="start-button" onclick="startGame()">Start Game</button>
+    </div>
+
+    <div class="game-area" id="game-area">
+        <div id="opponent-cards" class="card-area opponent-cards"></div>
+        <div class="game-status">
+            <p>Health: <span id="opponent-health">1000</span></p>
+        </div>
+        <div id="player-cards" class="card-area player-cards"></div>
+        <div class="action-buttons">
+            <button class="action-button" onclick="drawRandomCard()">Bốc Bài</button>
+        </div>
+        <div class="game-status">
+            <p>Your Health: <span id="player-health">1000</span></p>
+        </div>
+    </div>
+
+    <audio id="memeMusic" src="https://firebasestorage.googleapis.com/v0/b/nhachay-43b11.appspot.com/o/Y2meta.app%20-%20Onii%20chan%20baka%20-%20Renai%20Circulation%20-%20Quaniam%20Remix%20(%20QDT%20Guhancci%20)%20(320%20kbps).mp3?alt=media&token=b64b44fc-465c-4cc2-858e-336b4c47ca01" loop></audio>
+
+    <script>
+        const playerDeck = [
+            { name: "BÁC ĐA", img: "https://firebasestorage.googleapis.com/v0/b/nhachay-43b11.appspot.com/o/20240629_184701.jpg?alt=media&token=93464ae6-de72-4368-9602-07aca390fc00", attack: 5, defense: 3, type: "normal" },
+            { name: "TRẦN DẦN", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR-V2nws4vTa-fkhcaeDrMysIe33yEnIwphUQ&s", attack: 4, defense: 4, type: "normal" },
+            { name: "MA GAMING", img: "https://firebasestorage.googleapis.com/v0/b/nhachay-43b11.appspot.com/o/20240629_185549.jpg?alt=media&token=2a47ff78-548e-4d12-9927-8d3c73cda64e", attack: 6, defense: 2, type: "normal" },
+            { name: "ĐƯỜNG TANK", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3HpXQgLZBQhEKgl9JvpzeSkty7yKWrH01Tg&usqp=CAU", attack: 3, defense: 5, type: "normal" },
+            { name: "ÁNH SÁNG CỦA ĐẢNG", img: "https://pbs.twimg.com/profile_images/1232366469721161728/KS7zTIRg_400x400.jpg", effect: "increase attack", value: 2, type: "spell" },
+            { name: "MA VƯƠNG TULEN", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS39tXDUI_kCPLLHbpqqVlJKXLzM3qd4hbjxg&s", effect: "decrease attack", value: 3, type: "spell" },
+            { name: "TIẾN BỊP", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTj1mTNyixzleUrv0kFLAV2UxVnuq7ZXJ8Fmw&usqp=CAU", effect: "increase defense", value: 2, type: "spell" },
+            { name: "DIO BRANDO", img: "https://www.meme-arsenal.com/memes/5a1be7324a07087fad9a7d80eff381e9.jpg", effect: "decrease defense", value: 1, type: "spell" },
+            // Thêm các lá bài khác
+        ];
+
+        const opponentDeck = [
+            { name: "JACK 5 CỦ", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHDkXbNh0WKfHKG8loKAUdl_rmONhSBL6UkQ&usqp=CAU", attack: 3, defense: 5, type: "normal" },
+            { name: "RICARDO MILOS", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTE1ggjPiC1FZL7Jg7e9TaqsYVqTD6vnx1GlQ&usqp=CAU", attack: 6, defense: 2, type: "normal" },
+            { name: "FBI OPEN UP", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMSIGOsgvoMVjKlYEux1zNXY1q30IAeBcaxMdblBYViw&s", attack: 4, defense: 4, type: "normal" },
+            { name: "SÓI CÔ ĐỘC", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFA37sEbVq8qo-7jCqYlfEb2d_yrIrOCTwug&usqp=CAU", attack: 5, defense: 3, type: "normal" },
+            { name: "CHEEMS", img: "https://www.thepoetmagazine.org/wp-content/uploads/2024/05/meme-cheems-canh-sat.jpg", effect: "increase attack", value: 3, type: "spell" },
+            { name: "QUAN TÀI", img: "https://i.ytimg.com/vi/AxdmCmADFYk/maxresdefault.jpg", effect: "decrease attack", value: 2, type: "spell" },
+            { name: "ADOLF HITLER", img: "https://danviet.mediacdn.vn/upload/2-2016/images/2016-04-22/1461317830-1.jpg", effect: "increase defense", value: 2, type: "spell" },
+            { name: "TRẦN ĐỨC BO", img: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTxQYpNOhGQVI3_UYJpEJwlFUVZo1SWW1hyt15zCOaUSA&s", effect: "decrease defense", value: 1, type: "spell" },
+            // Thêm các lá bài khác
+        ];
+
+        let playerHand = [];
+        let opponentHand = [];
+        let playerField = [];
+        let opponentField = [];
+
+        let playerHealth = 1000; // Máu của người chơi
+        let opponentHealth = 1000; // Máu của đối thủ
+
+        let playerTurn = true; //
+        
+        function startGame() {
+            document.getElementById('memeMusic').play();
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('game-area').style.display = 'flex';
+            initialDraw();
+        }
+
+        function initialDraw() {
+            for (let i = 0; i < 6; i++) {
+                drawCard(playerDeck, playerHand, 'player-cards');
+                drawCard(opponentDeck, opponentHand, 'opponent-cards');
+            }
+        }
+
+        function drawCard(deck, hand, areaId) {
+            if (deck.length === 0) return;
+            const card = deck.splice(Math.floor(Math.random() * deck.length), 1)[0];
+            hand.push(card);
+            document.getElementById(areaId).appendChild(createCardElement(card));
+        }
+
+        function createCardElement(card) {
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card';
+            cardElement.onclick = function() {
+                if (playerTurn && card.type === 'normal') {
+                    playCard(card, playerHand, playerField, 'player-cards');
+                } else if (playerTurn && card.type === 'spell') {
+                    applySpell(card);
+                    removeCardFromHand(card, playerHand, 'player-cards');
+                }
+            };
+
+            const cardImage = document.createElement('img');
+            cardImage.src = card.img;
+            cardElement.appendChild(cardImage);
+
+            const cardName = document.createElement('h3');
+            cardName.textContent = card.name;
+            cardElement.appendChild(cardName);
+
+            if (card.type === "normal") {
+                const cardStats = document.createElement('p');
+                cardStats.textContent = `ST: ${card.attack} / MÁU: ${card.defense}`;
+                cardElement.appendChild(cardStats);
+            } else if (card.type === "spell") {
+                const cardEffect = document.createElement('p');
+                cardEffect.textContent = `Effect: ${card.effect} ${card.value}`;
+                cardElement.appendChild(cardEffect);
+            }
+
+            return cardElement;
+        }
+
+        function playCard(card, hand, field, areaId) {
+            const cardIndex = hand.findIndex(c => c.name === card.name);
+            if (cardIndex !== -1) {
+                const playedCard = hand.splice(cardIndex, 1)[0];
+                field.push(playedCard);
+                updateCardArea(hand, areaId);
+                if (areaId === 'player-cards') {
+                    playerTurn = false;
+                    opponentPlay();
+                } else {
+                    playerTurn = true;
+                }
+            }
+        }
+
+        function applySpell(card) {
+            if (card.effect === 'increase attack') {
+                playerField.forEach(c => c.attack += card.value);
+            } else if (card.effect === 'decrease attack') {
+                opponentField.forEach(c => c.attack -= card.value);
+            } else if (card.effect === 'increase defense') {
+                playerField.forEach(c => c.defense += card.value);
+            } else if (card.effect === 'decrease defense') {
+                opponentField.forEach(c => c.defense -= card.value);
+            }
+            checkField();
+        }
+
+        function removeCardFromHand(card, hand, areaId) {
+            const cardIndex = hand.findIndex(c => c.name === card.name);
+            if (cardIndex !== -1) {
+                hand.splice(cardIndex, 1);
+                updateCardArea(hand, areaId);
+            }
+        }
+
+        function opponentPlay() {
+            if (opponentHand.length > 0 && opponentField.length < 2) {
+                const randomIndex = Math.floor(Math.random() * opponentHand.length);
+                const cardToPlay = opponentHand.splice(randomIndex, 1)[0];
+                if (cardToPlay.type === 'normal') {
+                    opponentField.push(cardToPlay);
+                } else if (cardToPlay.type === 'spell') {
+                    applyOpponentSpell(cardToPlay);
+                }
+                updateCardArea(opponentHand, 'opponent-cards');
+                playerTurn = true;
+            }
+        }
+
+        function applyOpponentSpell(card) {
+            if (card.effect === 'increase attack') {
+                opponentField.forEach(c => c.attack += card.value);
+            } else if (card.effect === 'decrease attack') {
+                playerField.forEach(c => c.attack -= card.value);
+            } else if (card.effect === 'increase defense') {
+                opponentField.forEach(c => c.defense += card.value);
+            } else if (card.effect === 'decrease defense') {
+                playerField.forEach(c => c.defense -= card.value);
+            }
+            checkField();
+        }
+
+        function updateCardArea(hand, areaId) {
+            const cardArea = document.getElementById(areaId);
+            cardArea.innerHTML = '';
+            hand.forEach(card => {
+                cardArea.appendChild(createCardElement(card));
+            });
+        }
+
+        function drawRandomCard() {
+            if (playerHand.length < 4 && playerDeck.length > 0) {
+                drawCard(playerDeck, playerHand, 'player-cards');
+            } else {
+                alert('Bạn chỉ có thể rút thêm lá bài khi mất hai lá bài hoặc bộ bài đã hết!');
+            }
+        }
+
+        function checkField() {
+            playerField.forEach(card => {
+                if (card.attack <= 0 || card.defense <= 0) {
+                    removeCardFromField(card, playerField, 'player-cards');
+                }
+            });
+            opponentField.forEach(card => {
+                if (card.attack <= 0 || card.defense <= 0) {
+                    removeCardFromField(card, opponentField, 'opponent-cards');
+                }
+            });
+        }
+
+        function removeCardFromField(card, field, areaId) {
+            const cardIndex = field.findIndex(c => c.name === card.name);
+            if (cardIndex !== -1) {
+                field.splice(cardIndex, 1);
+                updateCardArea(field, areaId);
+            }
+        }
+
+        function checkHealth() {
+            if (playerHealth <= 0) {
+                alert('THUA CUỘC');
+                endGame();
+            } else if (opponentHealth <= 0) {
+                alert('CHIẾN THẮNG');
+                endGame();
+            }
+        }
+
+        function endGame() {
+            // Các thao tác kết thúc trò chơi (nếu cần)
+        }
+    </script>
+</body>
+</html>
